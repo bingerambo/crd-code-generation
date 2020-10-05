@@ -30,3 +30,23 @@ cd ~/go/src/github.com/bingerambo/crd-code-generation/cmd/nodecache/
 go build
 ./nodecache -kubeconfig ~/.kube/config
 ```
+
+Example log print info:
+
+```
+========================================
+ADD NodeCache ... 
+setNodeCache: {Name:node1 Datasets:4e1d6a39e550ee41&5&0;8e1d6a39e550ee4x&5&1 FreeSize:100 AllocatableSize:380} 
+========================================
+ADD NodeCache ... 
+setNodeCache: {Name:node3 Datasets:4e1d6a39e550ee41&5&0;8e1d6a39e550ee4x&5&1 FreeSize:0 AllocatableSize:0} 
+========================================
+ADD NodeCache ... 
+setNodeCache: {Name:node2 Datasets:4e1d6a39e550ee41&5&0 FreeSize:0 AllocatableSize:0} 
+========================================
+DELETE NodeCache ... 
+deleteNodeCache: node3 
+========================================
+ADD NodeCache ... 
+setNodeCache: {Name:node3 Datasets:4e1d6a39e550ee41&5&0;8e1d6a39e550ee4x&5&1 FreeSize:0 AllocatableSize:0} 
+```
