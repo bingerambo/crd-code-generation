@@ -1,0 +1,6 @@
+apiVersion: inspur.com/v1
+kind: NodeCache
+metadata:
+  name: node2
+spec:
+  datasets: "4e1d6a39e550ee41&5&0"

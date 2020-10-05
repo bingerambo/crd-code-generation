@@ -1,0 +1,8 @@
+apiVersion: inspur.com/v1
+kind: NodeCache
+metadata:
+  name: node1
+spec:
+  datasets: "4e1d6a39e550ee41&5&0;8e1d6a39e550ee4x&5&1"
+  freesize: 100
+  allocatablesize: 380
