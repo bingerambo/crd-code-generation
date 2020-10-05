@@ -5,8 +5,10 @@ import (
 	"fmt"
 	ncv1 "github.com/bingerambo/crd-code-generation/pkg/apis/inspur.com/v1"
 	ncinfov1 "github.com/bingerambo/crd-code-generation/pkg/nodecache_client/informers/externalversions/inspur/v1"
+	mem "github.com/bingerambo/crd-code-generation/pkg/util/mem"
 	"github.com/golang/glog"
 	"k8s.io/client-go/tools/cache"
+	"log"
 	"sync"
 )
 
@@ -15,6 +17,8 @@ func init() {
 		NC: NodeCache{
 			NCMap: map[string]*NcItem{},
 		},
+		// init mem cache
+		MC: mem.New(mem.DefaultExpiration, 0),
 	}
 }
 
@@ -41,8 +45,9 @@ type NodeCache struct {
 type SchedulerCache struct {
 	sync.Mutex
 	NCInformerv1 ncinfov1.NodeCacheInformer
-	NC      NodeCache
-	Version string
+	NC           NodeCache
+	MC           *mem.Cache
+	Version      string
 }
 
 var GSchedulerCache *SchedulerCache
@@ -79,9 +84,6 @@ func (sc *SchedulerCache) AddNodeCacheV1(obj interface{}) {
 	}
 	return
 }
-
-
-
 
 // UpdateNodeCacheV1 add NodeCache to scheduler cache
 func (sc *SchedulerCache) UpdateNodeCacheV1(oldObj, newObj interface{}) {
@@ -184,10 +186,18 @@ func (sc *SchedulerCache) setNodeCache(nc *ncv1.NodeCache) error {
 	sc.NC.NCMap[nc.Name] = ncItem
 	fmt.Printf("setNodeCache: %++v \n", *ncItem)
 
+	// using mem cache...
+	sc.MC.Set(nc.Name, ncItem, mem.DefaultExpiration)
+	x, found := sc.MC.Get(nc.Name)
+	if !found {
+		log.Fatalf("*NcItem Struct was not found for %s\n", nc.Name)
+	}
+	fmt.Printf("setMemCache: %++v \n", x.(*NcItem))
 
 	return nil
 
 }
+
 // Assumes that lock is already acquired.
 func (sc *SchedulerCache) addNodeCache(nc *ncv1.NodeCache) error {
 	fmt.Println("========================================")
@@ -211,6 +221,11 @@ func (sc *SchedulerCache) deleteNodeCache(nc *ncv1.NodeCache) error {
 	fmt.Println("DELETE NodeCache ... ")
 	fmt.Printf("deleteNodeCache: %s \n", nc.Name)
 	delete(sc.NC.NCMap, nc.Name)
+
+	// using mem cache...
+	sc.MC.Delete(nc.Name)
+	fmt.Printf("deleteMemCache: %s \n", nc.Name)
+
 	return nil
 }
 
@@ -248,4 +263,3 @@ func (sc *SchedulerCache) WaitForCacheSync(stopCh <-chan struct{}) bool {
 		}()...,
 	)
 }
-

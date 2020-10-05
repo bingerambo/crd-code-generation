@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -40,7 +42,7 @@ func main() {
 	stopCh := make(chan struct{})
 	for {
 		select {
-		case <- stopCh:
+		case <-stopCh:
 			return
 		default:
 
@@ -49,7 +51,7 @@ func main() {
 
 }
 
-func nodecaecheClientSet(kuberconfig string){
+func nodecaecheClientSet(kuberconfig string) {
 	cfg, err := clientcmd.BuildConfigFromFlags(*master, kuberconfig)
 	if err != nil {
 		glog.Fatalf("Error building kubeconfig: %v", err)
@@ -98,15 +100,37 @@ func nodecacheInformer(kuberconfig string) {
 
 	gsc.NCInformerv1 = ncinformer.Inspur().V1().NodeCaches()
 	gsc.NCInformerv1.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: gsc.AddNodeCacheV1,
+		AddFunc:    gsc.AddNodeCacheV1,
 		UpdateFunc: gsc.UpdateNodeCacheV1,
 		DeleteFunc: gsc.DeleteNodeCacheV1,
 	})
 
-	// .1 启动各个informer， list & watch
 	stopCh := make(chan struct{})
+
+	// .0 start up mem cache lister...
+	go wait.Until(func() {
+		mc := gsc.MC
+		fmt.Println()
+		fmt.Println()
+		fmt.Println()
+		fmt.Println("#######################################################")
+		fmt.Println("mem cache lister...")
+		for index := 1; index <= 3; index++ {
+			x, found := mc.Get(fmt.Sprintf("node%d", index))
+			if !found {
+				fmt.Printf("*NcItem Struct was not found for node%d\n",index)
+				continue
+			}
+			fmt.Printf("setMemCache: %++v \n", x.(*sdhedulerCache.NcItem))
+		}
+
+		fmt.Println("#######################################################")
+	}, 5*time.Second, stopCh)
+
+	// .1 start all informer, list & watch
+
 	go gsc.Run(stopCh)
-	// .2 从apiserver同步资源，即list
+	// .2 sync resources from apiserver by list...
 	gsc.WaitForCacheSync(stopCh)
 
 }
