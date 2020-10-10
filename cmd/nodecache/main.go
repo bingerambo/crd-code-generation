@@ -15,7 +15,6 @@ import (
 	"github.com/bingerambo/crd-code-generation/cmd/nodecache/sdhedulerCache"
 
 	ncver "github.com/bingerambo/crd-code-generation/pkg/nodecache_client/clientset/versioned"
-	nodecacheclientset "github.com/bingerambo/crd-code-generation/pkg/nodecache_client/clientset/versioned"
 	ncinfo "github.com/bingerambo/crd-code-generation/pkg/nodecache_client/informers/externalversions"
 )
 
@@ -58,7 +57,7 @@ func nodecaecheClientSet(kuberconfig string) {
 	}
 
 	//exampleClient, err := examplecomclientset.NewForConfig(cfg)
-	nodecacheclientset, err := nodecacheclientset.NewForConfig(cfg)
+	nodecacheclientset, err := ncver.NewForConfig(cfg)
 	if err != nil {
 		glog.Fatalf("Error building nodecache clientset: %v", err)
 	}
@@ -83,7 +82,7 @@ func nodecacheInformer(kuberconfig string) {
 		glog.Fatalf("Error building kubeconfig: %v", err)
 	}
 	var ncclient *ncver.Clientset
-	ncclient, err = nodecacheclientset.NewForConfig(cfg)
+	ncclient, err = ncver.NewForConfig(cfg)
 	if err != nil {
 		glog.Fatalf("Error building nodecache clientset: %v", err)
 	}
